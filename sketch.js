@@ -2,39 +2,44 @@ let dt = 0.1;
 let vLoss = 0.95; //0.95
 let sLen = 20; //20
 let n = [];
-let rr = [];
 let r;
+let e;
+let k = 0;
+let ee = [];
+let rr = [];
 
 //-----Bio-01-----//
-// let e = [newEdge(1, 2), newEdge(2, 3), newEdge(3, 4), newEdge(2, 4)];
+ee.push([newEdge(1, 2), newEdge(2, 3), newEdge(3, 4), newEdge(2, 4)]);
 rr.push([[["x", "y"], ["y", "z"]], [["x", "y"], ["x", "z"], ["y", "w"], ["z", "v"]]]);
 
 //-----Bio-02-----//
-// let e = [newEdge(1, 2), newEdge(1, 3), newEdge(3, 3)];
+ee.push([newEdge(1, 2), newEdge(1, 3), newEdge(3, 3)]);
 rr.push([[["x", "y"], ["x", "z"]], [["x", "y"], ["x", "z"], ["y", "w"], ["z", "v"]]]);
 
 //-----Bio-03-----//
-// let e = [newEdge(1, 2), newEdge(1, 3), newEdge(3, 4)];
+ee.push([newEdge(1, 2), newEdge(1, 3), newEdge(3, 4)]);
 rr.push([[["x", "y"], ["y", "z"]], [["x", "y"], ["x", "z"], ["y", "w"], ["z", "v"]]]);
 
 //-----Bio-04-----//
-// let e = [newEdge(1, 2), newEdge(1, 3), newEdge(3, 2)];
+ee.push([newEdge(1, 2), newEdge(1, 3), newEdge(3, 2)]);
 rr.push([[["x", "y"], ["y", "z"]], [["x", "y"], ["x", "z"], ["y", "w"], ["z", "v"]]]);
 
 //-----Bio-05-----//
-// let e = [newEdge(1, 2), newEdge(1, 3), newEdge(3, 2)];
+ee.push([newEdge(1, 2), newEdge(1, 3), newEdge(3, 2)]);
 rr.push([[["x", "y"], ["x", "z"]], [["x", "a"], ["x", "b"], ["y", "a"], ["y", "b"]]]);
 
 //-----Bio-06-----//
-// let e = [newEdge(1, 2), newEdge(1, 3)];
+ee.push([newEdge(1, 2), newEdge(1, 3)]);
 rr.push([[["x", "y"], ["x", "z"]], [["x", "a"], ["y", "a"], ["x", "y"], ["a", "w"]]]);
 
 //-----Bio-06-----//
-let e = [newEdge(1, 2), newEdge(2, 1), newEdge(1, 3)];
+ee.push([newEdge(1, 2), newEdge(2, 1), newEdge(1, 3)]);
 rr.push([[["x", "y"], ["y", "x"]], [["x", "a"], ["y", "a"], ["x", "y"], ["y", "x"]]]);
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
+  k = int(random(rr.length));
+  e = ee[k];
   let m = 0;
   for (let i = 0; i < e.length; i++) {
     if (m < e[i].l) m = e[i].l; 
@@ -54,7 +59,7 @@ function draw() {
 }
 
 function mouseClicked(event) {
-  r = rr[int(random(rr.length))];
+  r = rr[k];
   if (e.length < 80) e = ruleApply(r, e);
 }
 
