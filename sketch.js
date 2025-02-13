@@ -5,72 +5,68 @@ let sLen = 20;
 let xBounce = 1.5;
 let yBounce = 1.5;
 let rWalk = 2;
-let n = [];
-let r;
-let e;
-let k = 0;
+let g1, g2;
+let r1, r2;
 let ee = [];
 let rr = [];
 
 // -----Bio-01-----//
-ee.push([newEdge(1, 2), newEdge(2, 3), newEdge(3, 4), newEdge(2, 4)]);
+ee.push([[1, 2], [2, 3], [3, 4], [2, 4]]);
 rr.push([[["x", "y"], ["y", "z"]], [["x", "y"], ["x", "z"], ["y", "w"], ["z", "v"]]]);
 
 //-----Bio-02-----//
-ee.push([newEdge(1, 2), newEdge(1, 3), newEdge(3, 3)]);
+ee.push([[1, 2], [1, 3], [3, 3]]);
 rr.push([[["x", "y"], ["x", "z"]], [["x", "y"], ["x", "z"], ["y", "w"], ["z", "v"]]]);
 
 //-----Bio-03-----//
-ee.push([newEdge(1, 2), newEdge(1, 3), newEdge(3, 4)]);
+ee.push([[1, 2], [1, 3], [3, 4]]);
 rr.push([[["x", "y"], ["y", "z"]], [["x", "y"], ["x", "z"], ["y", "w"], ["z", "v"]]]);
 
 //-----Bio-04-----//
-ee.push([newEdge(1, 2), newEdge(1, 3), newEdge(3, 2)]);
+ee.push([[1, 2], [1, 3], [3, 2]]);
 rr.push([[["x", "y"], ["y", "z"]], [["x", "y"], ["x", "z"], ["y", "w"], ["z", "v"]]]);
 
 //-----Bio-05-----//
-ee.push([newEdge(1, 2), newEdge(1, 3), newEdge(3, 2)]);
+ee.push([[1, 2], [1, 3], [3, 2]]);
 rr.push([[["x", "y"], ["x", "z"]], [["x", "a"], ["x", "b"], ["y", "a"], ["y", "b"]]]);
-
-// //-----Bio-06-----//
-// ee.push([newEdge(1, 2), newEdge(1, 3)]);
-// rr.push([[["x", "y"], ["x", "z"]], [["x", "a"], ["y", "a"], ["x", "y"], ["a", "w"]]]);
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
   frameRate(30);
+  let k = int(random(rr.length));
+  g1 = createGraph(ee[k], 1);
+  r1 = rr[k];
   k = int(random(rr.length));
-  e = ee[k];
-  let m = 0;
-  for (let i = 0; i < e.length; i++) {
-    if (m < e[i].l) m = e[i].l; 
-    if (m < e[i].r) m = e[i].r;
-  }
-  for (let i = 0; i < m; i++) {
-    n.push(newNode(random(width / fScale), random(height / fScale)));
-  }
+  g2 = createGraph(ee[k], -1);
+  r2 = rr[k];
 }
 
 function draw() {
   scale(fScale);
   background(45);
-  updateNodesForces(e, n);
-  updateNodesPos(n);
-  drawNodes(n);
-  drawEdges(e, n);
+  updateNodesForces(g1);
+  updateNodesForces(g2);
+  checkCollisions(g1, g2);
+  updateNodesPos(g1);
+  updateNodesPos(g2);
+  drawNodes(g1);
+  drawNodes(g2);
+  drawEdges(g1);
+  drawEdges(g2);
 }
 
 function mouseClicked(event) {
-  r = rr[k];
-  if (e.length < 80) e = ruleApply(r, e);
+  if (g1.edges.length < 80) ruleApply(r1, g1);
+  if (g2.edges.length < 80) ruleApply(r2, g2);
 }
 
-drawEdges = (e, n) => {
+drawEdges = (g) => {
+  const e = g.edges;
+  stroke(150, 150, 230, 60);
+  noFill();
   for (let i = 0; i < e.length; i++) {
-    let l = n[e[i].l - 1];
-    let r = n[e[i].r - 1];
-    stroke(150, 150, 230, 60);
-    noFill();
+    const l = e[i].l;
+    const r = e[i].r;
     strokeWeight((min(l.d, r.d)) / 2);
     if (l !== r) {
       line(l.x, l.y, r.x, r.y);
@@ -86,12 +82,13 @@ drawEdges = (e, n) => {
   }
 }
 
-drawNodes = (n) => {
+drawNodes = (g) => {
+  const n = g.nodes;
   stroke(250, 40);
   noFill();
   for (let i = 0; i < n.length; i++) {
-    strokeWeight((n[i].d));
-    point(n[i].x, n[i].y);
+    const ni = n[i];
+    strokeWeight((ni.d));
+    point(ni.x, ni.y);
   }
 }
-

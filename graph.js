@@ -6,7 +6,22 @@ newEdge = (n0, n1) => {
   return {l: n0, r: n1};
 }
 
-updateNodesForces = (e, n) => {
+createGraph = (edgeList) => {
+  const edges = [];
+  const nodeMap = new Map();
+  for (let i = 0; i < edgeList.length; i++) {
+    const [a, b] = edgeList[i];
+    if (!nodeMap.has(a)) nodeMap.set(a, newNode(random(width / fScale), random(height / fScale)));
+    if (!nodeMap.has(b)) nodeMap.set(b, newNode(random(width / fScale), random(height / fScale)));
+    edges.push(newEdge(nodeMap.get(a), nodeMap.get(b)));
+  }
+  const nodes = [...nodeMap.values()];
+  return { nodes, edges};
+}
+
+updateNodesForces = (g) => {
+  const n = g.nodes;
+  const e = g.edges;
   // reset
   for (let i = 0; i < n.length; i++) {
     let ni = n[i];
@@ -22,8 +37,8 @@ updateNodesForces = (e, n) => {
     if (mouseIsPressed) {
       // d-squared
       let d = dist(ni.x, ni.y, mouseX / fScale, mouseY / fScale);
-      ni.hx = -1000 * (ni.x - mouseX / fScale) / (d * d);
-      ni.hy = -1000 * (ni.y - mouseY / fScale) / (d * d);
+      ni.hx = 1000 * (ni.x - mouseX / fScale) / (d * d);
+      ni.hy = 1000 * (ni.y - mouseY / fScale) / (d * d);
     }
   }
   // node interaction
@@ -44,9 +59,10 @@ updateNodesForces = (e, n) => {
   }
   // edge interaction
   for (let i = 0; i < e.length; i++) {
-    let l = n[e[i].l - 1], r = n[e[i].r - 1];
+    const l = e[i].l;
+    const r = e[i].r;
     if (l != r) {
-      let d = dist(l.x, l.y, r.x, r.y);
+      const d = dist(l.x, l.y, r.x, r.y);
       if (d > 0) {
         let f = (sLen - d) * 0.1;
         let fx = f * (l.x - r.x) / d, fy = f * (l.y - r.y) / d;
@@ -63,29 +79,39 @@ updateNodesForces = (e, n) => {
       r.d++;
     }
   }
-  // // center mass
-  // let mx = 0, my = 0;
-  // for (let i = 0; i < n.length - 1; i++) {
-  //   let ni = n[i];
-  //   mx += ni.x;
-  //   my += ni.y;
-  // }
-  // mx /= n.length;
-  // my /= n.length;
-  // for (let i = 0; i < n.length; i++) {
-  //   let ni = n[i];
-  //   let d = dist(ni.x, ni.y, mx, my);
-  //   if (d > 0) {
-  //     let f = 1000 * ni.d / (d * d);
-  //     let fx = f * (ni.x - mx) / d;
-  //     let fy = f * (ni.y - my) / d;
-  //     ni.fx += fx;
-  //     ni.fy += fy;
-  //   }
-  // }
 }
 
-updateNodesPos = (n) => {
+checkCollisions = (g1, g2) => {
+  const n1 = g1.nodes;
+  const n2 = g2.nodes;
+  for (let i = 0; i < n1.length; i++) {
+    for (j = 0; j < n2.length; j++) {
+      const ni = n1[i];
+      const nj = n2[j];
+      const dx = nj.x - ni.x;
+      const dy = nj.y - ni.y;
+      const d = sqrt(dx * dx + dy * dy);
+      if (d < (ni.d + nj.d) / 2) {
+        let tempVx = ni.vx;
+        let tempVy = ni.vy;
+        ni.vx = nj.vx;
+        ni.vy = nj.vy;
+        nj.vx = tempVx;
+        nj.vy = tempVy;
+        // Push nodes apart slightly to prevent sticking
+        const overlap = ((ni.d + nj.d) / 2 - d) / 2;
+        const angle = atan2(dy, dx);
+        ni.x -= cos(angle) * overlap;
+        ni.y -= sin(angle) * overlap;
+        nj.x += cos(angle) * overlap;
+        nj.y += sin(angle) * overlap;
+      }
+    }
+  }
+}
+
+updateNodesPos = (g) => {
+  const n = g.nodes;
   for (let i = 0; i < n.length; i++) {
     let ni = n[i];
     // update velocity
@@ -97,8 +123,6 @@ updateNodesPos = (n) => {
     // update position
     ni.x += (ni.vx + (random(rWalk) - rWalk / 2) / ni.d) * dt;
     ni.y += (ni.vy + (random(rWalk) - rWalk / 2) / ni.d) * dt;
-    // ni.x += (random() - 0.5) / ni.d;
-    // ni.y += (random() - 0.5) / ni.d;
     // check bouncing - update position and velocity
     if (ni.x < 0 || ni.x > width / fScale) {
       ni.vx *= abs(ni.vx) < 100 ? -xBounce : -1/xBounce;
@@ -117,12 +141,12 @@ updateNodesPos = (n) => {
 }
 
 matchNodes = (r, e) => {
-  let patt = r[0];
-  if (patt.length > e.length) return false;
-  let nodes = {};
-  for (let i = 0; i < patt.length; i++) {
-    let il = patt[i][0];
-    let ir = patt[i][1];
+  const pattern = r[0];
+  if (pattern.length > e.length) return false;
+  const nodes = {};
+  for (let i = 0; i < pattern.length; i++) {
+    let il = pattern[i][0];
+    let ir = pattern[i][1];
     if (!nodes[il]) nodes[il] = e[i].l
     else if (nodes[il] != e[i].l) return false;
     if (!nodes[ir]) nodes[ir] = e[i].r
@@ -131,37 +155,42 @@ matchNodes = (r, e) => {
   return nodes;
 }
 
-replaceNodes = (r, nodes) => {
-  let res = [];
-  let repl = r[1];
+replaceNodes = (r, nodes, g) => {
+  const n = g.nodes;
+  const res = [];
+  const repl = r[1];
+  let node;
   for (let i = 0; i < repl.length; i++) {
-    let il = repl[i][0];
-    let ir = repl[i][1];
+    const il = repl[i][0];
+    const ir = repl[i][1];
     if (!nodes[il]) {
-      nodes[il] = n.length + 1;
-      n.push(newNode(random(width / fScale), random(height / fScale)));
+      node = newNode(nodes[ir].x + nodes[ir].hx, nodes[ir].y + nodes[ir].hy);
+      nodes[il] = node;
+      n.push(node);
     }
     if (!nodes[ir]) {
-      nodes[ir] = n.length + 1;
-      n.push(newNode(random(width / fScale), random(height / fScale)));
+      node = newNode(nodes[il].x + nodes[il].hx, nodes[il].y + nodes[il].hy);
+      nodes[ir] = node;
+      n.push(node);
     }
     res.push(newEdge(nodes[il], nodes[ir]));
   }
   return res;
 }
 
-ruleApply = (r, e) => {
-  let res = e.slice(0); // copy
-  for (let i = 0; i < e.length - 1; i++) {
-    for (let j = i + 1; j < e.length; j++) {
-      let nodes = matchNodes(r, [e[i], e[j]]);
+ruleApply = (r, g) => {
+  const e1 = g.edges;
+  const e2 = g.edges.slice(0);
+  for (let i = 0; i < e1.length - 1; i++) {
+    for (let j = i + 1; j < e1.length; j++) {
+      let nodes = matchNodes(r, [e1[i], e1[j]]);
       if (!nodes) continue;
-      let edges  = replaceNodes(r, nodes);
-      res[i] = edges[0];
-      res[j] = edges[1];
-      for (let k = 2; k < edges.length; k++) res.push(edges[k]);
+      let edges  = replaceNodes(r, nodes, g);
+      e2[i] = edges[0];
+      e2[j] = edges[1];
+      for (let k = 2; k < edges.length; k++) e2.push(edges[k]);
     }
   }
-  return(res);
+  g.edges = e2;
 }
 
