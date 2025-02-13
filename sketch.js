@@ -1,6 +1,10 @@
 let dt = 0.1;
-let vLoss = 0.95; //0.95
-let sLen = 20; //20
+let vLoss = 0.95;
+let fScale = 5;
+let sLen = 20;
+let xBounce = 1.5;
+let yBounce = 1.5;
+let rWalk = 2;
 let n = [];
 let r;
 let e;
@@ -8,7 +12,7 @@ let k = 0;
 let ee = [];
 let rr = [];
 
-//-----Bio-01-----//
+// -----Bio-01-----//
 ee.push([newEdge(1, 2), newEdge(2, 3), newEdge(3, 4), newEdge(2, 4)]);
 rr.push([[["x", "y"], ["y", "z"]], [["x", "y"], ["x", "z"], ["y", "w"], ["z", "v"]]]);
 
@@ -28,16 +32,13 @@ rr.push([[["x", "y"], ["y", "z"]], [["x", "y"], ["x", "z"], ["y", "w"], ["z", "v
 ee.push([newEdge(1, 2), newEdge(1, 3), newEdge(3, 2)]);
 rr.push([[["x", "y"], ["x", "z"]], [["x", "a"], ["x", "b"], ["y", "a"], ["y", "b"]]]);
 
-//-----Bio-06-----//
-ee.push([newEdge(1, 2), newEdge(1, 3)]);
-rr.push([[["x", "y"], ["x", "z"]], [["x", "a"], ["y", "a"], ["x", "y"], ["a", "w"]]]);
-
-//-----Bio-06-----//
-ee.push([newEdge(1, 2), newEdge(2, 1), newEdge(1, 3)]);
-rr.push([[["x", "y"], ["y", "x"]], [["x", "a"], ["y", "a"], ["x", "y"], ["y", "x"]]]);
+// //-----Bio-06-----//
+// ee.push([newEdge(1, 2), newEdge(1, 3)]);
+// rr.push([[["x", "y"], ["x", "z"]], [["x", "a"], ["y", "a"], ["x", "y"], ["a", "w"]]]);
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
+  frameRate(30);
   k = int(random(rr.length));
   e = ee[k];
   let m = 0;
@@ -46,12 +47,13 @@ function setup() {
     if (m < e[i].r) m = e[i].r;
   }
   for (let i = 0; i < m; i++) {
-    n.push(newNode(random(width), random(height)));
+    n.push(newNode(random(width / fScale), random(height / fScale)));
   }
 }
 
 function draw() {
-  background(255);
+  scale(fScale);
+  background(45);
   updateNodesForces(e, n);
   updateNodesPos(n);
   drawNodes(n);
@@ -67,10 +69,9 @@ drawEdges = (e, n) => {
   for (let i = 0; i < e.length; i++) {
     let l = n[e[i].l - 1];
     let r = n[e[i].r - 1];
-    stroke(0, 60);
-    strokeWeight(1);
+    stroke(150, 150, 230, 60);
     noFill();
-    strokeWeight((min(l.d, r.d)));
+    strokeWeight((min(l.d, r.d)) / 2);
     if (l !== r) {
       line(l.x, l.y, r.x, r.y);
     } else {
@@ -86,8 +87,7 @@ drawEdges = (e, n) => {
 }
 
 drawNodes = (n) => {
-  stroke(0, 60);
-  strokeWeight(10);
+  stroke(250, 40);
   noFill();
   for (let i = 0; i < n.length; i++) {
     strokeWeight((n[i].d));

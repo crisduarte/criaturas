@@ -21,9 +21,9 @@ updateNodesForces = (e, n) => {
     let ni = n[i];
     if (mouseIsPressed) {
       // d-squared
-      let d = dist(ni.x, ni.y, mouseX, mouseY);
-      ni.fx = 1000 * (ni.x - mouseX) / (d * d);
-      ni.fy = 1000 * (ni.y - mouseY) / (d * d);
+      let d = dist(ni.x, ni.y, mouseX / fScale, mouseY / fScale);
+      ni.hx = -1000 * (ni.x - mouseX / fScale) / (d * d);
+      ni.hy = -1000 * (ni.y - mouseY / fScale) / (d * d);
     }
   }
   // node interaction
@@ -95,15 +95,17 @@ updateNodesPos = (n) => {
     ni.vx *= vLoss;
     ni.vy *= vLoss;
     // update position
-    ni.x += ni.vx * dt;
-    ni.y += ni.vy * dt;
+    ni.x += (ni.vx + (random(rWalk) - rWalk / 2) / ni.d) * dt;
+    ni.y += (ni.vy + (random(rWalk) - rWalk / 2) / ni.d) * dt;
+    // ni.x += (random() - 0.5) / ni.d;
+    // ni.y += (random() - 0.5) / ni.d;
     // check bouncing - update position and velocity
-    if (ni.x < 0 || ni.x > width) {
-      ni.vx *= -2;
+    if (ni.x < 0 || ni.x > width / fScale) {
+      ni.vx *= abs(ni.vx) < 100 ? -xBounce : -1/xBounce;
       ni.x += ni.vx * dt;
     }
-    if (ni.y < 0 || ni.y > height) {
-      ni.vy *= -2;
+    if (ni.y < 0 || ni.y > height / fScale) {
+      ni.vy *= abs(ni.vy) < 100 ? -yBounce : -1/yBounce;
       ni.y += ni.vy * dt;
     }
     // update heading
@@ -137,11 +139,11 @@ replaceNodes = (r, nodes) => {
     let ir = repl[i][1];
     if (!nodes[il]) {
       nodes[il] = n.length + 1;
-      n.push(newNode(random(width), random(height)));
+      n.push(newNode(random(width / fScale), random(height / fScale)));
     }
     if (!nodes[ir]) {
       nodes[ir] = n.length + 1;
-      n.push(newNode(random(width), random(height)));
+      n.push(newNode(random(width / fScale), random(height / fScale)));
     }
     res.push(newEdge(nodes[il], nodes[ir]));
   }
