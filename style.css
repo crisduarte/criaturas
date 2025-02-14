@@ -1,8 +1,33 @@
 html, body {
   margin: 0;
   padding: 0;
+  background-color: #242424; /* Matches background(45) in p5.js */
+  font-family: Arial, sans-serif;
+  cursor: pointers;
 }
+
+main {
+  justify-content: center;
+}
+
 canvas {
   display: block;
 }
 
+button {
+  background-color: #4CAF50; /* Green background */
+  border: none;
+  color: white; /* White text */
+  padding: 5px 10px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 13px;
+  margin: 10px;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #29612c; /* Darker green on hover */
+}

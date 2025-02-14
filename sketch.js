@@ -9,6 +9,8 @@ let g1, g2;
 let r1, r2;
 let ee = [];
 let rr = [];
+let osc1, osc2;
+let started = false;
 
 // -----Bio-01-----//
 ee.push([[1, 2], [2, 3], [3, 4], [2, 4]]);
@@ -39,6 +41,22 @@ function setup() {
   k = int(random(rr.length));
   g2 = createGraph(ee[k], -1);
   r2 = rr[k];
+  
+  // Create two oscillators
+  osc1 = new p5.Oscillator('sine');
+  osc2 = new p5.Oscillator('sine');
+  
+  // Set initial frequencies
+  osc1.freq(440); // A4
+  osc2.freq(660); // E5
+  
+  // Set initial amplitudes
+  osc1.amp(0);
+  osc2.amp(0);
+  
+  // Add event listener to the button
+  document.getElementById('startButton').addEventListener('click', startSound);
+  document.getElementById('newCreatures').addEventListener('click', setup);
 }
 
 function draw() {
@@ -58,6 +76,34 @@ function draw() {
 function mouseClicked(event) {
   if (g1.edges.length < 80) ruleApply(r1, g1);
   if (g2.edges.length < 80) ruleApply(r2, g2);
+}
+
+function startSound(event) {
+  event.stopPropagation(); // Prevent the event from bubbling up
+  if (!started) {
+    // Start the oscillators
+    osc1.start();
+    osc2.start();
+    started = true;
+  }
+}
+
+function keyPressed() {
+  if (key === 'A') {
+    osc1.amp(0.5, 0.1); // Fade in amplitude over 0.1 seconds
+  }
+  if (key === 'E') {
+    osc2.amp(0.5, 0.1); // Fade in amplitude over 0.1 seconds
+  }
+}
+
+function keyReleased() {
+  if (key === 'A') {
+    osc1.amp(0, 0.5); // Fade out amplitude over 0.5 seconds
+  }
+  if (key === 'E') {
+    osc2.amp(0, 0.5); // Fade out amplitude over 0.5 seconds
+  }
 }
 
 drawEdges = (g) => {
