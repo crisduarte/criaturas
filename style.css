@@ -3,38 +3,27 @@ html, body {
   padding: 0;
   font-family: Arial, sans-serif;
   cursor: pointer;
-  height: 100%;
-  overflow: hidden;
 }
 
 main {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  display: flex;
-  justify-content: end;
-  align-items: end;
   background-color: #242424;
-  padding: 10px 0;
-}
-
-canvas {
-  display: block;
+  text-align: center;
 }
 
 button {
   background-color: #4CAF50;
   border: none;
   color: white;
-  padding: 5px 10px;
-  text-align: center;
-  text-decoration: none;
   font-size: 14px;
   border-radius: 8px;
+  padding: 10px 20px;
   transition: background-color 0.3s ease;
 }
 
 button:hover {
   background-color: #29612c;
+}
+
+#startSound {
+  display: none;
 }

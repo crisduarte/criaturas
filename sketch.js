@@ -1,6 +1,6 @@
 let dt = 0.1;
 let vLoss = 0.95;
-let fScale = 5;
+let fScale = 6;
 let sLen = 20;
 let xBounce = 1.5;
 let yBounce = 1.5;
@@ -61,8 +61,8 @@ function draw() {
 }
 
 function mouseClicked(event) {
-  if (g1.edges.length < 80) ruleApply(r1, g1);
-  if (g2.edges.length < 80) ruleApply(r2, g2);
+  if (g1.edges.length < 30) ruleApply(r1, g1);
+  if (g2.edges.length < 30) ruleApply(r2, g2);
 }
 
 function newCreaturesClicked(event) {
@@ -164,12 +164,12 @@ playCollisions = (n0, n1) => {
 
 drawEdges = (g) => {
   const e = g.edges;
-  // stroke(150, 150, 230, 80);
+  //stroke(150, 150, 230, 80);
   noFill();
   for (let i = 0; i < e.length; i++) {
     const l = e[i].l;
     const r = e[i].r;
-    strokeWeight(min(l.d, r.d) / 2);
+    strokeWeight(edgeThickness(e[i]));
     const edgeLength = abs(dist(l.x, l.y, r.x, r.y) - sLen);
     const blue = map(edgeLength, 0, sLen, 230, 0);
     const red = map(edgeLength, 0, sLen, 0, 255);
@@ -194,7 +194,8 @@ drawNodes = (g) => {
   noFill();
   for (let i = 0; i < n.length; i++) {
     const ni = n[i];
-    strokeWeight((ni.d));
+    // strokeWeight(nodeDiameter(ni));
+    strokeWeight(ni.d);
     point(ni.x, ni.y);
   }
 }

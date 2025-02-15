@@ -23,6 +23,16 @@ createGraph = (edgeList) => {
   return { nodes, edges};
 }
 
+nodeDiameter = (n) => {
+  return n.d;
+}
+
+edgeThickness = (e) => {
+  const l = e.l;
+  const r = e.r;
+  return min(l.d, r.d) / 2;
+}
+
 updateNodesForces = (g) => {
   const n = g.nodes;
   const e = g.edges;
@@ -95,7 +105,7 @@ checkCollisions = (g1, g2) => {
       const dx = nj.x - ni.x;
       const dy = nj.y - ni.y;
       const d = sqrt(dx * dx + dy * dy);
-      if (d < (ni.d + nj.d) / 2) {
+      if (d < (nodeDiameter(ni) + nodeDiameter(nj)) / 2) {
         // Normal vector
         const nx = dx / d;
         const ny = dy / d;
@@ -120,7 +130,7 @@ checkCollisions = (g1, g2) => {
         nj.vy = ty * dpTan2 + ny * v2;
         playCollisions(ni, nj);
         // push nodes apart slightly to prevent sticking
-        const overlap = ((ni.d + nj.d) / 2 - d) / 2;
+        const overlap = ((nodeDiameter(ni) + nodeDiameter(nj)) / 2 - d) / 2;
         const angle = atan2(dy, dx);
         ni.x -= cos(angle) * overlap;
         ni.y -= sin(angle) * overlap;
@@ -145,14 +155,18 @@ updateNodesPos = (g) => {
     ni.x += (ni.vx + (random(rWalk) - rWalk / 2) / ni.d) * dt;
     ni.y += (ni.vy + (random(rWalk) - rWalk / 2) / ni.d) * dt;
     // check bouncing - update position and velocity
-    if (ni.x < 0 || ni.x > width / fScale) {
+    const left = nodeDiameter(ni) / 2;
+    const right = width / fScale - nodeDiameter(ni) / 2;
+    if (ni.x < left || ni.x > right) {
       ni.vx *= abs(ni.vx) < 100 ? -xBounce : -1/xBounce;
-      ni.x = ni.x < 0 ? 0 : width / fScale;
+      ni.x = ni.x < left ? left : right;
       ni.x += ni.vx * dt;
     }
-    if (ni.y < 0 || ni.y > height / fScale) {
+    const top = nodeDiameter(ni) / 2;
+    const bottom = height / fScale - nodeDiameter(ni) / 2;
+    if (ni.y < top || ni.y > bottom) {
       ni.vy *= abs(ni.vy) < 100 ? -yBounce : -1/yBounce;
-      ni.y = ni.y < 0 ? 0 : height / fScale;
+      ni.y = ni.y < top ? top : bottom;
       ni.y += ni.vy * dt;
     }
     // update heading
