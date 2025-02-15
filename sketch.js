@@ -9,7 +9,6 @@ let g1, g2;
 let r1, r2;
 let ee = [];
 let rr = [];
-let osc1, osc2;
 let started = false;
 
 // -----Bio-01-----//
@@ -36,27 +35,15 @@ function setup() {
   createCanvas(windowWidth, windowHeight);
   frameRate(30);
   let k = int(random(rr.length));
-  g1 = createGraph(ee[k], 1);
+  g1 = createGraph(ee[k]);
   r1 = rr[k];
   k = int(random(rr.length));
-  g2 = createGraph(ee[k], -1);
+  g2 = createGraph(ee[k]);
   r2 = rr[k];
-  
-  // Create two oscillators
-  osc1 = new p5.Oscillator('sine');
-  osc2 = new p5.Oscillator('sine');
-  
-  // Set initial frequencies
-  osc1.freq(440); // A4
-  osc2.freq(660); // E5
-  
-  // Set initial amplitudes
-  osc1.amp(0);
-  osc2.amp(0);
-  
+
   // Add event listener to the button
-  document.getElementById('startButton').addEventListener('click', startSound);
-  document.getElementById('newCreatures').addEventListener('click', setup);
+  document.getElementById('startSound').addEventListener('click', startSoundClicked);
+  document.getElementById('newCreatures').addEventListener('click', newCreaturesClicked);
 }
 
 function draw() {
@@ -78,42 +65,115 @@ function mouseClicked(event) {
   if (g2.edges.length < 80) ruleApply(r2, g2);
 }
 
-function startSound(event) {
-  event.stopPropagation(); // Prevent the event from bubbling up
+function newCreaturesClicked(event) {
+  event.stopPropagation();
+  stopSound(g1);
+  stopSound(g2);
+  started = false;
+  setup();
+}
+
+function startSoundClicked(event) {
+  event.stopPropagation();
+  startSound(g1);
+  startSound(g2);
+  started = true;
+}
+
+function startSound(g) {
   if (!started) {
-    // Start the oscillators
-    osc1.start();
-    osc2.start();
-    started = true;
+    // const n = g.nodes;
+    // for (let i = 0; i < n.length; i++) {
+    //   let ni = g.nodes[i];
+    //   ni.sound.start();
+    // }
+    // const e = g.edges;
+    // for (let i = 0; i < e.length; i++) {
+    //   let ei = e[i];
+    //   ei.osc.start();
+    // }
   }
 }
 
-function keyPressed() {
-  if (key === 'A') {
-    osc1.amp(0.5, 0.1); // Fade in amplitude over 0.1 seconds
-  }
-  if (key === 'E') {
-    osc2.amp(0.5, 0.1); // Fade in amplitude over 0.1 seconds
+function stopSound(g) {
+  if (started) {
+  //   const n = g.nodes;
+  //   for (let i = 0; i < n.length; i++) {
+  //     let ni = g.nodes[i];
+  //     ni.sound.amp(0);
+  //     ni.sound.stop();
+  //   }
+  //   const e = g.edges;
+  //   for (let i = 0; i < e.length; i++) {
+  //     let ei = e[i];
+  //     ei.osc.amp(0);
+  //     ei.osc.stop();
+  //   }
   }
 }
 
-function keyReleased() {
-  if (key === 'A') {
-    osc1.amp(0, 0.5); // Fade out amplitude over 0.5 seconds
-  }
-  if (key === 'E') {
-    osc2.amp(0, 0.5); // Fade out amplitude over 0.5 seconds
+// playNodes = (g) => {
+//   const n = g.nodes;
+//   for (let i = 0; i < n.length; i++) {
+//     const ni = g.nodes[i];
+//     const f = sqrt(ni.fx * ni.fx + ni.fy * ni.fy);
+//     const v = sqrt(ni.vx * ni.vx + ni.vy * ni.vy);
+//     let freq = map(f, 0, 500, 20, 1200, false);
+//     let amp = map(v, 0, 100, 0, 1 / n.length, true);
+//     if (!isFinite(freq)) freq = 440;
+//     if (!isFinite(amp)) amp = 0;
+//     ni.osc.freq(freq);
+//     ni.osc.amp(amp);
+//   }
+// }
+
+// playEdges = (g) => {
+//   const e = g.edges;
+//   for (let i = 0; i < e.length; i++) {
+    // const l = e[i].l;
+    // const r = e[i].r;
+    // const d = min(l.d, r.d);
+    // const edgeLength = dist(l.x, l.y, r.x, r.y);
+    //console.log(d);
+    // let freq = map(edgeLength, 0, sLen * 10, 20, 1000, false);//map(d, 0, 6, 80, 440, true);
+    // let amp = map(edgeLength, 0, sLen * 20, 0, 0.01, false);
+    // if (!isFinite(freq)) freq = 440;
+    // if (!isFinite(amp)) amp = 0;
+    //e[i].osc.freq(freq);
+    // e[i].osc.amp(amp, 0.1);
+//   }
+// }
+
+function kineticEnergy(node) {
+  const velocity = sqrt(node.vx * node.vx + node.vy * node.vy);
+  return 0.5 * node.d * velocity * velocity;
+}
+
+playCollisions = (n0, n1) => {
+  if (started) {
+      // const ke0 = kineticEnergy(n0);
+      // const amp0 = map(ke0, 80, 1000, 0, 0.1, false);
+      // n0.sound.amp(amp0 / 10);
+      // n0.env.play(n0.sound, 0, 0.01, 0.01);
+      // const ke1 = kineticEnergy(n1);
+      // const amp1 = map(ke1, 80, 1000, 0, 0.1, false);
+      // n1.sound.amp(amp1 / 10);
+      // n1.env.play(n1.sound, 0, 0.01, 0.01);
   }
 }
 
 drawEdges = (g) => {
   const e = g.edges;
-  stroke(150, 150, 230, 60);
+  // stroke(150, 150, 230, 80);
   noFill();
   for (let i = 0; i < e.length; i++) {
     const l = e[i].l;
     const r = e[i].r;
-    strokeWeight((min(l.d, r.d)) / 2);
+    strokeWeight(min(l.d, r.d) / 2);
+    const edgeLength = abs(dist(l.x, l.y, r.x, r.y) - sLen);
+    const blue = map(edgeLength, 0, sLen, 230, 0);
+    const red = map(edgeLength, 0, sLen, 0, 255);
+    stroke(red, 150, blue, 80);
     if (l !== r) {
       line(l.x, l.y, r.x, r.y);
     } else {
@@ -130,7 +190,7 @@ drawEdges = (g) => {
 
 drawNodes = (g) => {
   const n = g.nodes;
-  stroke(250, 40);
+  stroke(250, 60);
   noFill();
   for (let i = 0; i < n.length; i++) {
     const ni = n[i];

@@ -1,5 +1,9 @@
 newNode = (x, y) => {
-  return {x: x, y: y, vx: 0, vy: 0, fx: 0, fy: 0, hx: 0, hy: 0, d: 0};
+  // sound = new p5.Noise("white");
+  // sound.amp(0);
+  // env = new p5.Envelope();
+  // env.setExp(true);
+  return {x: x, y: y, vx: 0, vy: 0, fx: 0, fy: 0, hx: 0, hy: 0, d: 0};//, sound: sound, env: env};
 }
 
 newEdge = (n0, n1) => {
@@ -35,7 +39,6 @@ updateNodesForces = (g) => {
   for (let i = 0; i < n.length; i++) {
     let ni = n[i];
     if (mouseIsPressed) {
-      // d-squared
       let d = dist(ni.x, ni.y, mouseX / fScale, mouseY / fScale);
       ni.hx = 1000 * (ni.x - mouseX / fScale) / (d * d);
       ni.hy = 1000 * (ni.y - mouseY / fScale) / (d * d);
@@ -64,8 +67,9 @@ updateNodesForces = (g) => {
     if (l != r) {
       const d = dist(l.x, l.y, r.x, r.y);
       if (d > 0) {
-        let f = (sLen - d) * 0.1;
-        let fx = f * (l.x - r.x) / d, fy = f * (l.y - r.y) / d;
+        const f = (sLen - d) * 0.1;
+        const fx = f * (l.x - r.x) / d
+        const fy = f * (l.y - r.y) / d;
         l.fx += fx;
         r.fx -= fx;
         l.fy += fy;
@@ -92,13 +96,30 @@ checkCollisions = (g1, g2) => {
       const dy = nj.y - ni.y;
       const d = sqrt(dx * dx + dy * dy);
       if (d < (ni.d + nj.d) / 2) {
-        let tempVx = ni.vx;
-        let tempVy = ni.vy;
-        ni.vx = nj.vx;
-        ni.vy = nj.vy;
-        nj.vx = tempVx;
-        nj.vy = tempVy;
-        // Push nodes apart slightly to prevent sticking
+        // Normal vector
+        const nx = dx / d;
+        const ny = dy / d;
+        // Tangent vector
+        const tx = -ny;
+        const ty = nx;
+        // Dot product tangent
+        const dpTan1 = ni.vx * tx + ni.vy * ty;
+        const dpTan2 = nj.vx * tx + nj.vy * ty;
+        // Dot product normal
+        const dpNorm1 = ni.vx * nx + ni.vy * ny;
+        const dpNorm2 = nj.vx * nx + nj.vy * ny;
+        // Conservation of momentum in 1D
+        const m1 = ni.d;
+        const m2 = nj.d;
+        const v1 = dpNorm1 * (m1 - m2) / (m1 + m2) + dpNorm2 * 2 * m2 / (m1 + m2);
+        const v2 = dpNorm2 * (m2 - m1) / (m1 + m2) + dpNorm1 * 2 * m1 / (m1 + m2);
+        // Update velocities
+        ni.vx = tx * dpTan1 + nx * v1;
+        ni.vy = ty * dpTan1 + ny * v1;
+        nj.vx = tx * dpTan2 + nx * v2;
+        nj.vy = ty * dpTan2 + ny * v2;
+        playCollisions(ni, nj);
+        // push nodes apart slightly to prevent sticking
         const overlap = ((ni.d + nj.d) / 2 - d) / 2;
         const angle = atan2(dy, dx);
         ni.x -= cos(angle) * overlap;
@@ -126,10 +147,12 @@ updateNodesPos = (g) => {
     // check bouncing - update position and velocity
     if (ni.x < 0 || ni.x > width / fScale) {
       ni.vx *= abs(ni.vx) < 100 ? -xBounce : -1/xBounce;
+      ni.x = ni.x < 0 ? 0 : width / fScale;
       ni.x += ni.vx * dt;
     }
     if (ni.y < 0 || ni.y > height / fScale) {
       ni.vy *= abs(ni.vy) < 100 ? -yBounce : -1/yBounce;
+      ni.y = ni.y < 0 ? 0 : height / fScale;
       ni.y += ni.vy * dt;
     }
     // update heading
