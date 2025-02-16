@@ -128,7 +128,6 @@ checkCollisions = (g1, g2) => {
         ni.vy = ty * dpTan1 + ny * v1;
         nj.vx = tx * dpTan2 + nx * v2;
         nj.vy = ty * dpTan2 + ny * v2;
-        playCollisions(ni, nj);
         // push nodes apart slightly to prevent sticking
         const overlap = ((nodeDiameter(ni) + nodeDiameter(nj)) / 2 - d) / 2;
         const angle = atan2(dy, dx);
@@ -136,6 +135,8 @@ checkCollisions = (g1, g2) => {
         ni.y -= sin(angle) * overlap;
         nj.x += cos(angle) * overlap;
         nj.y += sin(angle) * overlap;
+        // play collision sound
+        playCollision(ni, nj);
       }
     }
   }

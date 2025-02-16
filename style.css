@@ -3,11 +3,27 @@ html, body {
   padding: 0;
   font-family: Arial, sans-serif;
   cursor: pointer;
+  height: 100%;
 }
 
 main {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center; /* Center the buttons horizontally */
+  align-items: center; /* Center the buttons vertically */
   background-color: #242424;
-  text-align: center;
+  padding: 10px 0;
+}
+
+#canvasContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: calc(100% - 50px); /* Adjust height to leave space for the buttons */
 }
 
 button {
@@ -17,6 +33,7 @@ button {
   font-size: 14px;
   border-radius: 8px;
   padding: 10px 20px;
+  margin: 0 10px;
   transition: background-color 0.3s ease;
 }
 
