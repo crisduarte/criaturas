@@ -1,10 +1,12 @@
-let dt = 0.1;
-let vLoss = 0.95;
-let fScale = 5;
-let sLen = 20;
+const dt = 0.1;
+const vLoss = 0.95;
+const edgeRestLength = 20;
+const maxNodeDiameter = 2.5 * edgeRestLength;
+const edgeNodeRatio = 1 / 1.61803398875; // 1 / golden ratio
 let xBounce = 1.5;
 let yBounce = 1.5;
 let rWalk = 2;
+let fScale;
 let g1, g2;
 let r1, r2;
 let ee = [];
@@ -36,7 +38,8 @@ function setup() {
   let canvasContainer = document.getElementById('canvasContainer');
   let canvas = createCanvas(canvasContainer.offsetWidth, canvasContainer.offsetHeight);
   canvas.parent('canvasContainer');
-  frameRate(30);
+  frameRate(60);
+  fScale = 3 * maxNodeDiameter / min(width, height);
   // create graphs
   let k = int(random(rr.length));
   g1 = createGraph(ee[k]);
@@ -54,7 +57,7 @@ function setup() {
 }
 
 function draw() {
-  scale(fScale);
+  scale(1/fScale);
   background(45);
   updateNodesForces(g1);
   updateNodesForces(g2);
@@ -108,7 +111,7 @@ cancelEvolutionClicked = (event) => {
   return false;
 }
 
-function startSoundClicked(event) {
+startSoundClicked = (event) => {
   event.stopPropagation();
   startSound(g1);
   startSound(g2);
@@ -124,9 +127,9 @@ drawEdges = (g) => {
     const l = e[i].l;
     const r = e[i].r;
     strokeWeight(edgeThickness(e[i]));
-    const edgeLength = abs(dist(l.x, l.y, r.x, r.y) - sLen);
-    const blue = map(edgeLength, 0, sLen, 230, 0);
-    const red = map(edgeLength, 0, sLen, 0, 255);
+    const edgeLength = abs(dist(l.x, l.y, r.x, r.y) - edgeRestLength);
+    const blue = map(edgeLength, 0, edgeRestLength, 230, 0);
+    const red = map(edgeLength, 0, edgeRestLength, 0, 255);
     stroke(red, 150, blue, 80);
     if (l !== r) {
       line(l.x, l.y, r.x, r.y);
