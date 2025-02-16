@@ -44,10 +44,13 @@ function setup() {
   k = int(random(rr.length));
   g2 = createGraph(ee[k]);
   r2 = rr[k];
-  // Add event listener to the button
+  // Add event listener to the main buttons
   document.getElementById('startSound').addEventListener('click', startSoundClicked);
   document.getElementById('newCreatures').addEventListener('click', newCreaturesClicked);
   document.getElementById('evolveCreatures').addEventListener('click', evolveCreaturesClicked);
+  // Add event listener to the modal dialog buttons
+  document.getElementById('confirmEvolution').addEventListener('click', confirmEvolutionClicked);
+  document.getElementById('cancelEvolution').addEventListener('click', cancelEvolutionClicked);
 }
 
 function draw() {
@@ -55,29 +58,54 @@ function draw() {
   background(45);
   updateNodesForces(g1);
   updateNodesForces(g2);
-  checkCollisions(g1, g2);
   updateNodesPos(g1);
   updateNodesPos(g2);
+  checkCollisions(g1, g2);
   drawNodes(g1);
   drawNodes(g2);
   drawEdges(g1);
   drawEdges(g2);
 }
 
-function newCreaturesClicked(event) {
+newCreaturesClicked = (event) => {
   event.stopPropagation();
   stopSound(g1);
   stopSound(g2);
   started = false;
   setup();
+  return false;
 }
 
-function evolveCreaturesClicked(event) {
+evolveCreaturesClicked = (event) => {
   event.stopPropagation();
   if (g1.edges.length + g2.edges.length < 160) {
-    ruleApply(r1, g1);
+    if (g1.edges.length <= g2.edges.length) {
+      ruleApply(r1, g1)
+    } else {
+      ruleApply(r2, g2);
+    } 
+  } else {
+    // Show the modal dialog
+    document.getElementById('warningModal').style.display = 'block';
+  }
+  return false;
+}
+
+confirmEvolutionClicked = (event) => {
+  event.stopPropagation();
+  if (g1.edges.length <= g2.edges.length) {
+    ruleApply(r1, g1)
+  } else {
     ruleApply(r2, g2);
   }
+  document.getElementById('warningModal').style.display = 'none';
+  return false;
+}
+
+cancelEvolutionClicked = (event) => {
+  event.stopPropagation();
+  document.getElementById('warningModal').style.display = 'none';
+  return false;
 }
 
 function startSoundClicked(event) {
@@ -85,6 +113,7 @@ function startSoundClicked(event) {
   startSound(g1);
   startSound(g2);
   started = true;
+  return false;
 }
 
 drawEdges = (g) => {

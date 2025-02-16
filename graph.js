@@ -24,13 +24,14 @@ createGraph = (edgeList) => {
 }
 
 nodeDiameter = (n) => {
-  return n.d;
+  return min(n.d, 50);
 }
 
 edgeThickness = (e) => {
   const l = e.l;
   const r = e.r;
-  return min(l.d, r.d) / 2;
+  aureaNumber = 1.61803398875;
+  return min(nodeDiameter(l), nodeDiameter(r)) / aureaNumber;
 }
 
 updateNodesForces = (g) => {
@@ -57,7 +58,8 @@ updateNodesForces = (g) => {
   // node interaction
   for (let i = 0; i < n.length - 1; i++) {
     for (let j = i + 1; j < n.length; j++) {
-      let ni = n[i], nj = n[j];
+      let ni = n[i]
+      let nj = n[j];
       let d = dist(ni.x, ni.y, nj.x, nj.y);
       if (1 < d && d < 180) {
         let f = 100 / (d * d);
