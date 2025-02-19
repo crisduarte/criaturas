@@ -3,7 +3,8 @@ newNode = (x, y) => {
   // sound.amp(0);
   // env = new p5.Envelope();
   // env.setExp(true);
-  return { x: x, y: y, vx: 0, vy: 0, fx: 0, fy: 0, hx: 0, hy: 0, d: 0 };//, sound: sound, env: env};
+  const sound = loadSound('torch-click-1-48731.mp3');
+  return { x: x, y: y, vx: 0, vy: 0, fx: 0, fy: 0, hx: 0, hy: 0, d: 0, sound: sound };
 }
 
 newEdge = (n0, n1) => {
@@ -169,6 +170,7 @@ updateNodesPos = (g) => {
       ni.vx *= abs(ni.vx) < 100 ? -xBounce : -1/xBounce;
       ni.x = ni.x < left ? left : right;
       ni.x += ni.vx * dt;
+      playBounce(ni);
     }
     const top = nodeDiameter(ni) / 2;
     const bottom = height * fScale - nodeDiameter(ni) / 2;
@@ -176,6 +178,7 @@ updateNodesPos = (g) => {
       ni.vy *= abs(ni.vy) < 100 ? -yBounce : -1/yBounce;
       ni.y = ni.y < top ? top : bottom;
       ni.y += ni.vy * dt;
+      playBounce(ni);
     }
     // update heading
     ni.hx /= ni.d;

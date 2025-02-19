@@ -45,9 +45,11 @@ button:active {
   background-color: #1E4620; /* Darker green for pressed state */
 }
 
+/*
 #startSound {
   display: none;
 }
+*/
 
 /* Modal styles */
 .modal {

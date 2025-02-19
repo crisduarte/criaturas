@@ -12,6 +12,7 @@ let r1, r2;
 let ee = [];
 let rr = [];
 let started = false;
+let sound;
 
 // -----Bio-01-----//
 ee.push([[1, 2], [2, 3], [3, 4], [2, 4]]);
@@ -32,6 +33,10 @@ rr.push([[["x", "y"], ["y", "z"]], [["x", "y"], ["x", "z"], ["y", "w"], ["z", "v
 //-----Bio-05-----//
 ee.push([[1, 2], [1, 3], [3, 2]]);
 rr.push([[["x", "y"], ["x", "z"]], [["x", "a"], ["x", "b"], ["y", "a"], ["y", "b"]]]);
+
+function preload() {
+  sound = loadSound('torch-click-1-48731.mp3');
+}
 
 function setup() {
   // create canvas

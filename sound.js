@@ -1,11 +1,14 @@
 
 startSound = (g) => {
     if (!started) {
-      // const n = g.nodes;
-      // for (let i = 0; i < n.length; i++) {
-      //   let ni = g.nodes[i];
-      //   ni.sound.start();
-      // }
+      const n = g.nodes;
+      for (let i = 0; i < n.length; i++) {
+        let ni = g.nodes[i];
+        if (ni.sound) {
+          ni.sound.amp(0);
+          ni.sound.pan(0);
+        }
+      }
       // const e = g.edges;
       // for (let i = 0; i < e.length; i++) {
       //   let ei = e[i];
@@ -16,13 +19,15 @@ startSound = (g) => {
   
   stopSound = (g) => {
     if (started) {
-    //   const n = g.nodes;
-    //   for (let i = 0; i < n.length; i++) {
-    //     let ni = g.nodes[i];
-    //     ni.sound.amp(0);
-    //     ni.sound.stop();
-    //   }
-    //   const e = g.edges;
+      const n = g.nodes;
+      for (let i = 0; i < n.length; i++) {
+        let ni = g.nodes[i];
+        if (ni.sound) {
+          ni.sound.amp(0);
+          ni.sound.stop();
+        }
+      }
+    // const e = g.edges;
     //   for (let i = 0; i < e.length; i++) {
     //     let ei = e[i];
     //     ei.osc.amp(0);
@@ -85,3 +90,14 @@ startSound = (g) => {
     }
   }
   
+  playBounce = (n) => {
+    if (started) {
+      if (n.sound && n.sound.isLoaded() && !n.sound.isPlaying()) {
+        const v = sqrt(n.vx * n.vx + n.vy * n.vy);
+        n.sound.amp(map(v, 0, 50, 0, 0.1, true));
+        const pan = (n.x - width * fScale / 2) / (width * fScale / 2);
+        n.sound.pan(pan);
+        n.sound.play();
+      }
+    }
+  }
