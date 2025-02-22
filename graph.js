@@ -1,27 +1,22 @@
-newNode = (x, y) => {
-  // sound = new p5.Noise("white");
-  // sound.amp(0);
-  // env = new p5.Envelope();
-  // env.setExp(true);
-  const sound = loadSound('torch-click-1-48731.mp3');
-  return { x: x, y: y, vx: 0, vy: 0, fx: 0, fy: 0, hx: 0, hy: 0, d: 0, sound: sound };
+newNode = (x, y, nodeSound) => {
+  return { x: x, y: y, vx: 0, vy: 0, fx: 0, fy: 0, hx: 0, hy: 0, d: 0, sound: nodeSound };
 }
 
-newEdge = (n0, n1) => {
-  return { l: n0, r: n1 };
+newEdge = (n0, n1, edgeSound) => {
+  return { l: n0, r: n1, thickness: 0, size: 0, sound: edgeSound };
 }
 
-createGraph = (edgeList) => {
+createGraph = (edgeList, graphSound, nodeSound, edgeSound) => {
   const edges = [];
   const nodeMap = new Map();
   for (let i = 0; i < edgeList.length; i++) {
     const [a, b] = edgeList[i];
-    if (!nodeMap.has(a)) nodeMap.set(a, newNode(random(width * fScale), random(height * fScale)));
-    if (!nodeMap.has(b)) nodeMap.set(b, newNode(random(width * fScale), random(height * fScale)));
-    edges.push(newEdge(nodeMap.get(a), nodeMap.get(b)));
+    if (!nodeMap.has(a)) nodeMap.set(a, newNode(random(width * fScale), random(height * fScale), nodeSound));
+    if (!nodeMap.has(b)) nodeMap.set(b, newNode(random(width * fScale), random(height * fScale), nodeSound));
+    edges.push(newEdge(nodeMap.get(a), nodeMap.get(b), edgeSound));
   }
   const nodes = [...nodeMap.values()];
-  return { nodes, edges };
+  return { nodes, edges, sound: graphSound };
 }
 
 nodeDiameter = (n) => {
@@ -79,8 +74,9 @@ updateNodesForces = (g) => {
   }
   // edge interaction
   for (let i = 0; i < e.length; i++) {
-    const l = e[i].l;
-    const r = e[i].r;
+    const ei = e[i];
+    const l = ei.l;
+    const r = ei.r;
     if (l != r) {
       const d = sqrt(dist2(l.x, l.y, r.x, r.y));
       if (d > 0) {
@@ -186,6 +182,21 @@ updateNodesPos = (g) => {
     ni.hx -= ni.x;
     ni.hy -= ni.y;
   }
+  // update edges
+  const e = g.edges;
+  for (let i = 0; i < e.length; i++) {
+    const ei = e[i];
+    const l = ei.l;
+    const r = ei.r;
+    ei.thickness = edgeThickness(ei);
+    if (l != r) {
+      ei.size = sqrt(dist2(l.x, l.y, r.x, r.y));
+    } else {
+      ei.size = edgeRestLength;
+    }
+    playEdge(ei);
+  }
+  playGraph(g);
 }
 
 matchNodes = (r, e) => {
@@ -203,7 +214,7 @@ matchNodes = (r, e) => {
   return nodes;
 }
 
-replaceNodes = (r, nodes, g) => {
+replaceNodes = (r, nodes, g, soundNode, soundEdge) => {
   const n = g.nodes;
   const res = [];
   const repl = r[1];
@@ -212,28 +223,28 @@ replaceNodes = (r, nodes, g) => {
     const il = repl[i][0];
     const ir = repl[i][1];
     if (!nodes[il]) {
-      node = newNode(nodes[ir].x + nodes[ir].hx, nodes[ir].y + nodes[ir].hy);
+      node = newNode(nodes[ir].x + nodes[ir].hx, nodes[ir].y + nodes[ir].hy, soundNode);
       nodes[il] = node;
       n.push(node);
     }
     if (!nodes[ir]) {
-      node = newNode(nodes[il].x + nodes[il].hx, nodes[il].y + nodes[il].hy);
+      node = newNode(nodes[il].x + nodes[il].hx, nodes[il].y + nodes[il].hy, soundNode);
       nodes[ir] = node;
       n.push(node);
     }
-    res.push(newEdge(nodes[il], nodes[ir]));
+    res.push(newEdge(nodes[il], nodes[ir], soundEdge));
   }
   return res;
 }
 
-ruleApply = (r, g) => {
+ruleApply = (r, g, soundNode, soundEdge) => {
   const e1 = g.edges;
   const e2 = g.edges.slice(0);
   for (let i = 0; i < e1.length - 1; i++) {
     for (let j = i + 1; j < e1.length; j++) {
       let nodes = matchNodes(r, [e1[i], e1[j]]);
       if (!nodes) continue;
-      let edges  = replaceNodes(r, nodes, g);
+      let edges  = replaceNodes(r, nodes, g, soundNode, soundEdge);
       e2[i] = edges[0];
       e2[j] = edges[1];
       for (let k = 2; k < edges.length; k++) e2.push(edges[k]);

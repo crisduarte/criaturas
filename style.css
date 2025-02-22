@@ -14,7 +14,7 @@ main {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #242424;
+  background-color: #1b1b1b;
   padding: 10px 0;
 }
 
@@ -27,9 +27,9 @@ main {
 }
 
 button {
-  background-color: #4CAF50;
+  background-color: #2d382d;
   border: none;
-  color: white;
+  color: rgb(182, 176, 176);
   font-size: 14px;
   border-radius: 8px;
   padding: 10px 20px;
@@ -66,17 +66,17 @@ button:active {
 }
 
 .modal-content {
-  background-color: #fefefe;
+  background-color: #7e7e7e;
   margin: 15% auto; /* 15% from the top and centered */
   padding: 20px;
-  border: 1px solid #888;
+  border: 1px solid #4d4d4d;
   width: 80%; /* Could be more or less, depending on screen size */
 }
 
 .modal button {
-  background-color: #4CAF50; /* Green background */
+  background-color: #2d382d;; /* Green background */
   border: none;
-  color: white; /* White text */
+  color: rgb(182, 176, 176);
   padding: 10px 20px;
   text-align: center;
   text-decoration: none;

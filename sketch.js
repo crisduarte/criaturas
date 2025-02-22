@@ -12,7 +12,7 @@ let r1, r2;
 let ee = [];
 let rr = [];
 let started = false;
-let sound;
+let soundBg, soundG1, soundG2, soundBounce1, soundBounce2, filter1, osc1, osc2;
 
 // -----Bio-01-----//
 ee.push([[1, 2], [2, 3], [3, 4], [2, 4]]);
@@ -30,12 +30,16 @@ rr.push([[["x", "y"], ["y", "z"]], [["x", "y"], ["x", "z"], ["y", "w"], ["z", "v
 ee.push([[1, 2], [1, 3], [3, 2]]);
 rr.push([[["x", "y"], ["y", "z"]], [["x", "y"], ["x", "z"], ["y", "w"], ["z", "v"]]]);
 
-//-----Bio-05-----//
-ee.push([[1, 2], [1, 3], [3, 2]]);
-rr.push([[["x", "y"], ["x", "z"]], [["x", "a"], ["x", "b"], ["y", "a"], ["y", "b"]]]);
+// //-----Bio-05-----//
+// ee.push([[1, 2], [1, 3], [3, 2]]);
+// rr.push([[["x", "y"], ["x", "z"]], [["x", "a"], ["x", "b"], ["y", "a"], ["y", "b"]]]);
 
 function preload() {
-  sound = loadSound('torch-click-1-48731.mp3');
+  soundBg = loadSound('ground-rumble.wav');
+  soundG1 = loadSound('shrimps-and-crustaceans.mp3');
+  soundG2 = loadSound('shrimps-and-crustaceans.mp3');
+  soundBounce1 = loadSound('tick1.mp3');
+  soundBounce2 = loadSound('tick2.mp3');
 }
 
 function setup() {
@@ -45,12 +49,20 @@ function setup() {
   canvas.parent('canvasContainer');
   frameRate(60);
   fScale = 3 * maxNodeDiameter / min(width, height);
+  filter1 = new p5.Filter('highpass');
+  filter1.freq(12000);
+  filter1.res(1);
+  filter1.amp(1);
+  soundBounce1.disconnect();
+  soundBounce2.disconnect();
+  soundBounce1.connect(filter1);
+  soundBounce2.connect(filter1);
   // create graphs
   let k = int(random(rr.length));
-  g1 = createGraph(ee[k]);
+  g1 = createGraph(ee[k], soundG1, null, null);
   r1 = rr[k];
   k = int(random(rr.length));
-  g2 = createGraph(ee[k]);
+  g2 = createGraph(ee[k], soundG2, null, null);
   r2 = rr[k];
   // Add event listener to the main buttons
   document.getElementById('startSound').addEventListener('click', startSoundClicked);
@@ -63,7 +75,7 @@ function setup() {
 
 function draw() {
   scale(1/fScale);
-  background(45);
+  background(0);
   updateNodesForces(g1);
   updateNodesForces(g2);
   updateNodesPos(g1);
@@ -77,21 +89,19 @@ function draw() {
 
 newCreaturesClicked = (event) => {
   event.stopPropagation();
-  stopSound(g1);
-  stopSound(g2);
-  started = false;
+  stopSound();
   setup();
   return false;
 }
 
 evolveCreaturesClicked = (event) => {
   event.stopPropagation();
-  if (g1.edges.length + g2.edges.length < 160) {
+  if (g1.edges.length + g2.edges.length < 180) {
     if (g1.edges.length <= g2.edges.length) {
-      ruleApply(r1, g1)
+      ruleApply(r1, g1, null, null)
     } else {
-      ruleApply(r2, g2);
-    } 
+      ruleApply(r2, g2, null, null);
+    }
   } else {
     // Show the modal dialog
     document.getElementById('warningModal').style.display = 'block';
@@ -102,9 +112,9 @@ evolveCreaturesClicked = (event) => {
 confirmEvolutionClicked = (event) => {
   event.stopPropagation();
   if (g1.edges.length <= g2.edges.length) {
-    ruleApply(r1, g1)
+    ruleApply(r1, g1, null, null)
   } else {
-    ruleApply(r2, g2);
+    ruleApply(r2, g2, null, null);
   }
   document.getElementById('warningModal').style.display = 'none';
   return false;
@@ -118,21 +128,19 @@ cancelEvolutionClicked = (event) => {
 
 startSoundClicked = (event) => {
   event.stopPropagation();
-  startSound(g1);
-  startSound(g2);
-  started = true;
+  startSound();
   return false;
 }
 
 drawEdges = (g) => {
   const e = g.edges;
-  //stroke(150, 150, 230, 80);
   noFill();
   for (let i = 0; i < e.length; i++) {
-    const l = e[i].l;
-    const r = e[i].r;
-    strokeWeight(edgeThickness(e[i]));
-    const edgeLength = abs(dist(l.x, l.y, r.x, r.y) - edgeRestLength);
+    const ei = e[i];
+    const l = ei.l;
+    const r = ei.r;
+    strokeWeight(ei.thickness);
+    const edgeLength = abs(ei.size - edgeRestLength);
     const blue = map(edgeLength, 0, edgeRestLength, 230, 0);
     const red = map(edgeLength, 0, edgeRestLength, 0, 255);
     stroke(red, 150, blue, 80);

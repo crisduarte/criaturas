@@ -1,103 +1,122 @@
 
-startSound = (g) => {
+startSound = () => {
     if (!started) {
-      const n = g.nodes;
-      for (let i = 0; i < n.length; i++) {
-        let ni = g.nodes[i];
-        if (ni.sound) {
-          ni.sound.amp(0);
-          ni.sound.pan(0);
+      if (soundBg && soundBg.isLoaded()) {
+        soundBg.amp(0.02);
+        soundBg.loop(true);
+        soundBg.play();
+      }
+      if (soundG1 && soundG1.isLoaded()) {
+        soundG1.amp(0);
+        soundG1.loop(true);
+        soundG1.play();
+      }
+      if (soundG2 && soundG2.isLoaded()) {
+        soundG2.amp(0);
+        soundG2.jump(20);
+        soundG2.loop(true);
+        soundG2.play();
+      }
+      if (soundBounce1 && soundBounce1.isLoaded()) {
+        soundBounce1.amp(0);
+      }
+      if (soundBounce2 && soundBounce2.isLoaded()) {
+        soundBounce2.amp(0);
+      }
+      if (osc1) {
+        osc1.amp(0);
+        osc1.start();
+      }
+      if (osc2) {
+        osc2.amp(0);
+        osc2.start();
+      }
+      started = true
+    }
+  }
+  
+  stopSound = () => {
+    if (started) {
+      if (soundBg && soundBg.isLoaded()) {
+        soundBg.amp(0);
+        soundBg.stop();
+      }
+      if (soundG1 && soundG1.isLoaded()) {
+        soundG1.amp(0);
+        soundG1.stop();
+      }
+      if (soundG2 && soundG2.isLoaded()) {
+        soundG2.amp(0);
+        soundG2.stop();
+      }
+      if (soundBounce1 && soundBounce1.isLoaded()) {
+        soundBounce1.amp(0);
+      }
+      if (soundBounce2 && soundBounce2.isLoaded()) {
+        soundBounce2.amp(0);
+      }
+      if (osc1) {
+        osc1.amp(0);
+      }
+      if (osc2) {
+        osc2.amp(0);
+      }
+      started = false
+    }
+  }
+  
+  playGraph = (g) => {
+    if (started) {
+      if (g.sound && g.sound.isLoaded()) {
+        const n = g.nodes;
+        let xm = 0;
+        for (let i = 0; i < n.length; i++) {
+          xm += n[i].x;
+        }
+        xm /= n.length;
+        const amp = map(n.length, 0, 200, 0, 0.2, true);
+        const pan = (xm - width * fScale / 2) / (width * fScale / 2);
+        g.sound.amp(amp);
+        g.sound.pan(pan);
+      }
+    }
+  }
+
+  playEdge = (e) => {
+    if (started) {
+      if (e.sound) {
+        if (e.thickness > 7) {
+          // console.log(e.thickness, e.size);
+          // const freq = map(e.thickness, edgeNodeRatio * 4, edgeNodeRatio * maxNodeDiameter, 200, 40, true);
+          // const amp = map(e.size, edgeRestLength, 3 * edgeRestLength, 0, 0.1, true);
+          // const pan = ((e.l.x + e.r.x) / 2 - width * fScale / 2) / (width * fScale / 2);
+          // e.sound.freq(freq);
+          // e.sound.amp(amp);
+          // e.sound.pan(pan);
         }
       }
-      // const e = g.edges;
-      // for (let i = 0; i < e.length; i++) {
-      //   let ei = e[i];
-      //   ei.osc.start();
-      // }
     }
   }
-  
-  stopSound = (g) => {
-    if (started) {
-      const n = g.nodes;
-      for (let i = 0; i < n.length; i++) {
-        let ni = g.nodes[i];
-        if (ni.sound) {
-          ni.sound.amp(0);
-          ni.sound.stop();
-        }
-      }
-    // const e = g.edges;
-    //   for (let i = 0; i < e.length; i++) {
-    //     let ei = e[i];
-    //     ei.osc.amp(0);
-    //     ei.osc.stop();
-    //   }
-    }
-  }
-  
-  playNodes = (g) => {
-    if (started) {
-      // const n = g.nodes;
-      // for (let i = 0; i < n.length; i++) {
-      //   const ni = g.nodes[i];
-      //   const f = sqrt(ni.fx * ni.fx + ni.fy * ni.fy);
-      //   const v = sqrt(ni.vx * ni.vx + ni.vy * ni.vy);
-      //   let freq = map(f, 0, 500, 20, 1200, false);
-      //   let amp = map(v, 0, 100, 0, 1 / n.length, true);
-      //   if (!isFinite(freq)) freq = 440;
-      //   if (!isFinite(amp)) amp = 0;
-      //   ni.osc.freq(freq);
-      //   ni.osc.amp(amp);
-      // }
-    }
-  }
-  
-  playEdges = (g) => {
-    if (started) {
-      // const e = g.edges;
-      // for (let i = 0; i < e.length; i++) {
-      //   const l = e[i].l;
-      //   const r = e[i].r;
-      //   const d = min(l.d, r.d);
-      //   const edgeLength = dist(l.x, l.y, r.x, r.y);
-      //   console.log(d);
-      //   let freq = map(edgeLength, 0, sLen * 10, 20, 1000, false);//map(d, 0, 6, 80, 440, true);
-      //   let amp = map(edgeLength, 0, sLen * 20, 0, 0.01, false);
-      //   if (!isFinite(freq)) freq = 440;
-      //   if (!isFinite(amp)) amp = 0;
-      //   e[i].osc.freq(freq);
-      //   e[i].osc.amp(amp, 0.1);
-      // }
-    }
-  }
-  
-  function kineticEnergy(node) {
-    const velocity = sqrt(node.vx * node.vx + node.vy * node.vy);
-    return 0.5 * node.d * velocity * velocity;
-  }
-  
+
   playCollision = (n0, n1) => {
     if (started) {
         // const ke0 = kineticEnergy(n0);
-        // const amp0 = map(ke0, 80, 1000, 0, 0.1, false);
-        // n0.sound.amp(amp0 / 10);
-        // n0.env.play(n0.sound, 0, 0.01, 0.01);
         // const ke1 = kineticEnergy(n1);
-        // const amp1 = map(ke1, 80, 1000, 0, 0.1, false);
-        // n1.sound.amp(amp1 / 10);
-        // n1.env.play(n1.sound, 0, 0.01, 0.01);
+        // const amp = map(ke0 + ke1, 5, 100, 0.01, 0.3, true);
+        // soundBg2.amp(amp);
     }
   }
   
   playBounce = (n) => {
     if (started) {
-      if (n.sound && n.sound.isLoaded() && !n.sound.isPlaying()) {
+      const soundBounce = random([soundBounce1, soundBounce2]);
+      if (soundBounce && soundBounce.isLoaded()) {
         const v = sqrt(n.vx * n.vx + n.vy * n.vy);
-        n.sound.amp(map(v, 0, 50, 0, 0.1, true));
+        const amp = map(v, 0, 200, 0, 0.1, true);
         const pan = (n.x - width * fScale / 2) / (width * fScale / 2);
-        n.sound.pan(pan);
-        n.sound.play();
+        soundBounce.amp(amp);
+        soundBounce.pan(pan);
+        soundBounce.play();
       }
     }
   }
