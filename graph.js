@@ -1,22 +1,23 @@
-newNode = (x, y, nodeSound) => {
-  return { x: x, y: y, vx: 0, vy: 0, fx: 0, fy: 0, hx: 0, hy: 0, d: 0, sound: nodeSound };
+newNode = (x, y) => {;
+  return { x, y, vx: 0, vy: 0, fx: 0, fy: 0, hx: 0, hy: 0, d: 0 };
 }
 
-newEdge = (n0, n1, edgeSound) => {
-  return { l: n0, r: n1, thickness: 0, size: 0, sound: edgeSound };
+newEdge = (n0, n1) => {
+  return { l: n0, r: n1, size: 0 };
 }
 
-createGraph = (edgeList, graphSound, nodeSound, edgeSound) => {
+createGraph = (edgeList, sound) => {
+  sound = newSound(sound);
   const edges = [];
   const nodeMap = new Map();
   for (let i = 0; i < edgeList.length; i++) {
     const [a, b] = edgeList[i];
-    if (!nodeMap.has(a)) nodeMap.set(a, newNode(random(width * fScale), random(height * fScale), nodeSound));
-    if (!nodeMap.has(b)) nodeMap.set(b, newNode(random(width * fScale), random(height * fScale), nodeSound));
-    edges.push(newEdge(nodeMap.get(a), nodeMap.get(b), edgeSound));
+    if (!nodeMap.has(a)) nodeMap.set(a, newNode(random(width * fScale), random(height * fScale)));
+    if (!nodeMap.has(b)) nodeMap.set(b, newNode(random(width * fScale), random(height * fScale)));
+    edges.push(newEdge(nodeMap.get(a), nodeMap.get(b)));
   }
   const nodes = [...nodeMap.values()];
-  return { nodes, edges, sound: graphSound };
+  return { nodes, edges, sound };
 }
 
 nodeDiameter = (n) => {
@@ -31,6 +32,36 @@ dist2 = (x1, y1, x2, y2) => {
   const dx = x2 - x1;
   const dy = y2 - y1;
   return dx * dx + dy * dy;
+}
+
+startCountInteractions = (g) => {
+  if (!g._timeInteraction) {
+    g._timeInteraction = millis();
+    g._interactions = 0;
+    g._xInteractions = 0;
+    g.interactions = 0;
+    g.xInteractions = 0;
+  }
+}
+
+addCountInteractions = (g, interactions, x) => {
+  g._interactions += interactions;
+  g._xInteractions += x;
+}
+
+updateCountInteractions = (g) => {
+  if (g._timeInteraction) {
+    const currTime = millis();
+    if (currTime - g._timeInteraction > samplingTime) {
+      g.interactions = g._interactions;
+      g.xInteractions = 0;
+      if (g._interactions > 0)
+        g.xInteractions = g._xInteractions / g._interactions;
+      g._timeInteraction = currTime;
+      g._interactions = 0;
+      g._xInteractions = 0;
+    }
+  }
 }
 
 updateNodesForces = (g) => {
@@ -50,8 +81,10 @@ updateNodesForces = (g) => {
     let ni = n[i];
     if (mouseIsPressed) {
       let d2 = dist2(ni.x, ni.y, mouseX * fScale, mouseY * fScale);
-      ni.hx = 1000 * (ni.x - mouseX * fScale) / d2;
-      ni.hy = 1000 * (ni.y - mouseY * fScale) / d2;
+      if (d2 > 1) {
+        ni.hx = 1000 * (ni.x - mouseX * fScale) / d2;
+        ni.hy = 1000 * (ni.y - mouseY * fScale) / d2;
+      }
     }
   }
   // node interaction
@@ -59,12 +92,12 @@ updateNodesForces = (g) => {
     const ni = n[i];
     for (let j = i + 1; j < n.length; j++) {
       const nj = n[j];
-      let d2 = dist2(ni.x, ni.y, nj.x, nj.y);
-      let d = sqrt(d2);
+      const d2 = dist2(ni.x, ni.y, nj.x, nj.y);
+      const d = sqrt(d2);
       if (1 < d && d < 3 * maxNodeDiameter) {
-        let f = 100 / d2;
-        let fx = f * (ni.x - nj.x) / d;
-        let fy = f * (ni.y - nj.y) / d;
+        const f = 100 / d2;
+        const fx = f * (ni.x - nj.x) / d;
+        const fy = f * (ni.y - nj.y) / d;
         ni.fx += fx;
         nj.fx -= fx;
         ni.fy += fy;
@@ -78,11 +111,11 @@ updateNodesForces = (g) => {
     const l = ei.l;
     const r = ei.r;
     if (l != r) {
-      const d = sqrt(dist2(l.x, l.y, r.x, r.y));
-      if (d > 0) {
-        const f = (edgeRestLength - d) * 0.1;
-        const fx = f * (l.x - r.x) / d
-        const fy = f * (l.y - r.y) / d;
+      ei.size = sqrt(dist2(l.x, l.y, r.x, r.y));
+      if (ei.size > 1) {
+        const f = (edgeRestLength - ei.size) * 0.1;
+        const fx = f * (l.x - r.x) / ei.size
+        const fy = f * (l.y - r.y) / ei.size;
         l.fx += fx;
         r.fx -= fx;
         l.fy += fy;
@@ -94,13 +127,17 @@ updateNodesForces = (g) => {
       }
       l.d++;
       r.d++;
+    } else {
+      ei.size = edgeRestLength;
     }
   }
 }
 
-checkCollisions = (g1, g2) => {
+updateNodesCollisions = (g1, g2) => {
   const n1 = g1.nodes;
   const n2 = g2.nodes;
+  startCountInteractions(g1);
+  startCountInteractions(g2);
   for (let i = 0; i < n1.length; i++) {
     const ni = n1[i];
     const niDiameter = nodeDiameter(ni);
@@ -109,7 +146,7 @@ checkCollisions = (g1, g2) => {
       const dx = nj.x - ni.x;
       const dy = nj.y - ni.y;
       const d = sqrt(dx * dx + dy * dy);
-      if (d < (niDiameter + nodeDiameter(nj)) / 2) {
+      if (1 < d && d < (niDiameter + nodeDiameter(nj)) / 2) {
         // Normal vector
         const nx = dx / d;
         const ny = dy / d;
@@ -132,41 +169,36 @@ checkCollisions = (g1, g2) => {
         ni.vy = ty * dpTan1 + ny * v1;
         nj.vx = tx * dpTan2 + nx * v2;
         nj.vy = ty * dpTan2 + ny * v2;
-        // // push nodes apart slightly to prevent sticking
-        // const overlap = ((nodeDiameter(ni) + nodeDiameter(nj)) / 2 - d) / 2;
-        // const angle = atan2(dy, dx);
-        // ni.x -= cos(angle) * overlap;
-        // ni.y -= sin(angle) * overlap;
-        // nj.x += cos(angle) * overlap;
-        // nj.y += sin(angle) * overlap;
-        // play collision sound
-        playCollision(ni, nj);
+        // push nodes apart slightly to prevent sticking
+        const overlap = ((nodeDiameter(ni) + nodeDiameter(nj)) / 2 - d) / 2;
+        const angle = atan2(dy, dx);
+        ni.x -= cos(angle) * overlap;
+        ni.y -= sin(angle) * overlap;
+        nj.x += cos(angle) * overlap;
+        nj.y += sin(angle) * overlap;
+        // count interactions
+        addCountInteractions(g1, 1, ni.x);
+        addCountInteractions(g2, 1, nj.x);
       }
     }
   }
+  updateCountInteractions(g1);
+  updateCountInteractions(g2);
 }
 
-updateNodesPos = (g) => {
+updateNodesBouncing = (g) => {
   const n = g.nodes;
+  startCountInteractions(g);
   for (let i = 0; i < n.length; i++) {
-    let ni = n[i];
-    // update velocity
-    ni.vx += ni.fx * dt;
-    ni.vy += ni.fy * dt;
-    // update velocity loss
-    ni.vx *= vLoss;
-    ni.vy *= vLoss;
-    // update position
-    ni.x += (ni.vx + (random(rWalk) - rWalk / 2) / ni.d) * dt;
-    ni.y += (ni.vy + (random(rWalk) - rWalk / 2) / ni.d) * dt;
-    // check bouncing - update position and velocity
+    const ni = n[i];
     const left = nodeDiameter(ni) / 2;
     const right = width * fScale - nodeDiameter(ni) / 2;
     if (ni.x < left || ni.x > right) {
       ni.vx *= abs(ni.vx) < 100 ? -xBounce : -1/xBounce;
       ni.x = ni.x < left ? left : right;
       ni.x += ni.vx * dt;
-      playBounce(ni);
+      g.bounces++;
+      g.xBouncing += ni.x;
     }
     const top = nodeDiameter(ni) / 2;
     const bottom = height * fScale - nodeDiameter(ni) / 2;
@@ -174,29 +206,49 @@ updateNodesPos = (g) => {
       ni.vy *= abs(ni.vy) < 100 ? -yBounce : -1/yBounce;
       ni.y = ni.y < top ? top : bottom;
       ni.y += ni.vy * dt;
-      playBounce(ni);
+      addCountInteractions(g, 1, ni.x);
     }
-    // update heading
+  }
+  updateCountInteractions(g);
+}
+
+updateNodesPositions = (g, rWalk) => {
+  const n = g.nodes;
+  startCountInteractions(g);
+  for (let i = 0; i < n.length; i++) {
+    const ni = n[i];
+    // update velocity
+    ni.vx += ni.fx * dt;
+    ni.vy += ni.fy * dt;
+    // noise walk
+    if (ni.d < 2) {
+      ni.vx += (random(rWalk) - rWalk / 2);
+      ni.vy += (random(rWalk) - rWalk / 2);
+    }
+    // update velocity loss
+    ni.vx *= vLoss;
+    ni.vy *= vLoss;
+    // update position
+    ni.x += ni.vx * dt;
+    ni.y += ni.vy * dt;
+    // check velocity
+    const v = sqrt(ni.vx * ni.vx + ni.vy * ni.vy);
+    addCountInteractions(g, v / edgeRestLength, ni.x);
+  }
+  updateCountInteractions(g);
+}
+
+updateNodesHeading = (g) => {
+  const n = g.nodes;
+  for (let i = 0; i < n.length; i++) {
+    const ni = n[i];
+    if (ni.d == 0)
+      ni.d = 1;
     ni.hx /= ni.d;
     ni.hy /= ni.d;
     ni.hx -= ni.x;
     ni.hy -= ni.y;
   }
-  // update edges
-  const e = g.edges;
-  for (let i = 0; i < e.length; i++) {
-    const ei = e[i];
-    const l = ei.l;
-    const r = ei.r;
-    ei.thickness = edgeThickness(ei);
-    if (l != r) {
-      ei.size = sqrt(dist2(l.x, l.y, r.x, r.y));
-    } else {
-      ei.size = edgeRestLength;
-    }
-    playEdge(ei);
-  }
-  playGraph(g);
 }
 
 matchNodes = (r, e) => {
@@ -214,7 +266,7 @@ matchNodes = (r, e) => {
   return nodes;
 }
 
-replaceNodes = (r, nodes, g, soundNode, soundEdge) => {
+replaceNodes = (r, nodes, g) => {
   const n = g.nodes;
   const res = [];
   const repl = r[1];
@@ -223,28 +275,28 @@ replaceNodes = (r, nodes, g, soundNode, soundEdge) => {
     const il = repl[i][0];
     const ir = repl[i][1];
     if (!nodes[il]) {
-      node = newNode(nodes[ir].x + nodes[ir].hx, nodes[ir].y + nodes[ir].hy, soundNode);
+      node = newNode(nodes[ir].x + nodes[ir].hx, nodes[ir].y + nodes[ir].hy);
       nodes[il] = node;
       n.push(node);
     }
     if (!nodes[ir]) {
-      node = newNode(nodes[il].x + nodes[il].hx, nodes[il].y + nodes[il].hy, soundNode);
+      node = newNode(nodes[il].x + nodes[il].hx, nodes[il].y + nodes[il].hy);
       nodes[ir] = node;
       n.push(node);
     }
-    res.push(newEdge(nodes[il], nodes[ir], soundEdge));
+    res.push(newEdge(nodes[il], nodes[ir]));
   }
   return res;
 }
 
-ruleApply = (r, g, soundNode, soundEdge) => {
+ruleApply = (r, g) => {
   const e1 = g.edges;
   const e2 = g.edges.slice(0);
   for (let i = 0; i < e1.length - 1; i++) {
     for (let j = i + 1; j < e1.length; j++) {
       let nodes = matchNodes(r, [e1[i], e1[j]]);
       if (!nodes) continue;
-      let edges  = replaceNodes(r, nodes, g, soundNode, soundEdge);
+      let edges  = replaceNodes(r, nodes, g);
       e2[i] = edges[0];
       e2[j] = edges[1];
       for (let k = 2; k < edges.length; k++) e2.push(edges[k]);
